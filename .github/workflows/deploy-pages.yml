@@ -38,20 +38,18 @@ jobs:
       - name: Build de export estático
         run: bun run build
 
-      - name: Empaquetar para Pages (bajo /ronda + redirect raíz)
+      - name: Verificar salida
         run: |
-          mkdir -p site/ronda
-          cp -r out/. site/ronda/
-          cat > site/index.html << 'HTML'
-          <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./ronda/"><title>RONDA</title></head><body><script>location.replace('./ronda/')</script><p>RONDA — <a href="./ronda/">entrar</a></p></body></html>
-          HTML
-          test -f site/ronda/index.html || { echo "Falta site/ronda/index.html"; exit 1; }
-          test -d site/ronda/_next || { echo "Faltan assets _next"; exit 1; }
-          echo "✓ Paquete listo: $(find site -name '*.html' | wc -l) HTML"
+          # Pages de proyecto sirve el artefacto bajo /ronda/ → el basePath
+          # ya queda implícito en la URL: el artefacto es out/ directamente.
+          test -f out/index.html || { echo "Falta out/index.html"; exit 1; }
+          test -d out/_next || { echo "Faltan assets _next"; exit 1; }
+          grep -q '/ronda/_next' out/registro/index.html || { echo "Los assets no usan el basePath /ronda"; exit 1; }
+          echo "✓ Export OK: $(find out -name '*.html' | wc -l) HTML, assets con basePath /ronda"
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: out
 
   deploy:
     name: Publicar en Pages
