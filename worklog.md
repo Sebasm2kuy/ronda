@@ -25,3 +25,25 @@ Stage Summary:
 - Flujo entregado: REGISTRARME → CREAR PERFIL → GRABAR/PREVISUALIZAR PRESENTACIÓN (con cámara real via MediaRecorder; skip disponible sin cámara) → ENTRAR A UNA RONDA → VIDEOLLAMADA SIMULADA (camera local real + video demo remoto) → ROMPEHIELOS → TERMINAR RONDA → ELEGIR INTERÉS → MATCH → CHAT → EVENTOS → PERFIL → ADMIN
 - Arquitectura preparada para: OAuth real, WebRTC real (módulo de video aislado en cita-client), matching IA (matching.ts con interfaz única), moderación (Report/Block), eventos recomendados
 - Admin PIN por defecto: ronda2026 (ADMIN_PIN en env)
+
+---
+Task ID: 2
+Agent: main (Super Z)
+Task: RONDA Etapa 2 — verificación E2E completa, deploy en modo producción y publicación en GitHub (Sebasm2kuy/ronda)
+
+Work Log:
+- Verificado que la V1 existente estaba 100% intacta: landing, identidad visual, flujo completo (no se reconstruyó nada)
+- E2E en dev: registro (Bruno) → foto → 18+/términos → onboarding video (fallback sin cámara OK) → sala de espera (radar + contadores) → match con Lucía → ronda (timer 5:00, rompehielos + rotación "Otra", reportar/bloquear) → evaluación → match con confeti → chat (mensaje + respuesta demo) → reservar evento → conexiones → perfil → móvil 390px (bottom nav) → admin (PIN)
+- media.ts y cleanup_test_users.ts: UPLOAD_DIR ahora portable (process.cwd()/uploads, configurable por env)
+- Creados README.md (setup, deploy Vercel/VPS, arquitectura, hoja de futuro IA/WebRTC/OAuth) y .env.example (ADMIN_PIN, UPLOAD_DIR, DATABASE_URL)
+- .gitignore: excluidos db/*.db, uploads/, assets_tmp/; DB fuera del repo (recrear con db:push + seed)
+- GitHub: token inicial del usuario inválido (401, revocado); usuario entregó nuevo token → push exitoso a https://github.com/Sebasm2kuy/ronda (main, 4 commits, repo limpio sin .env ni boilerplate ni assets temporales; sin secretos — verificado con grep)
+- Build de producción verificado (next build standalone, todas las rutas) y app servida en modo producción en :3000 (Caddy reverse-proxy)
+- E2E en producción: registro (Valeria) → ronda con Andrés → evaluación → match → chat → eventos → perfil — todo OK
+- Limpieza final: usuarios de prueba eliminados (solo 10 demo + 4 eventos + 12 rompehielos + 1 ronda demo activa), server de producción corriendo
+
+Stage Summary:
+- Repo público: https://github.com/Sebasm2kuy/ronda (rama main, código fuente completo de RONDA)
+- App corriendo en producción standalone sobre :3000, E2E verificado en ambos modos
+- Para futuros push: git push con token válido de Sebasm2kuy (scope repo/contents write); remote "origin" ya configurado
+- Pendiente para siguientes iteraciones: OAuth real, WebRTC real, IA de rompehielos/matching, "segunda oportunidad" funcional
