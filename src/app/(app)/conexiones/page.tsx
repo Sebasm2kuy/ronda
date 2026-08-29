@@ -56,7 +56,7 @@ export default function ConexionesPage() {
           {active.map((c, i) => (
             <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Link
-                href={`/chat/${c.id}`}
+                href={`/chat/?id=${c.id}`}
                 className="group flex items-center gap-4 rounded-3xl border border-border bg-surface/60 p-4 transition-colors hover:border-primary/40"
               >
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl">

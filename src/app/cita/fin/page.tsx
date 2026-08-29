@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Heart, Smile, Hand, Loader2, Flame } from "lucide-react";
 import { apiGet, apiPost, ApiError } from "@/lib/client";
@@ -34,10 +34,10 @@ const OPTIONS: Array<{ value: Choice; label: string; desc: string; icon: typeof 
   },
 ];
 
-export default function FinRondaPage() {
+function FinRondaInner() {
   const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const roundId = params?.id ?? "";
+  const searchParams = useSearchParams();
+  const roundId = searchParams.get("id") ?? "";
 
   const [round, setRound] = useState<RoundInfo | null>(null);
   const [sending, setSending] = useState<Choice | null>(null);
@@ -59,7 +59,7 @@ export default function FinRondaPage() {
         { choice }
       );
       if (res.matched && res.connectionId) {
-        router.replace(`/match/${res.connectionId}`);
+        router.replace(`/match/?id=${res.connectionId}`);
         return;
       }
       setResult({ matched: false, pending: Boolean(res.pending) });
@@ -130,7 +130,7 @@ export default function FinRondaPage() {
             <div className="mt-5 flex items-center justify-center gap-3">
               <div className="h-12 w-12 overflow-hidden rounded-full border border-border">
                 {partner.photoUrl ? (
-                   
+
                   <img src={partner.photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center font-bold">{partner.name[0]}</div>
@@ -181,5 +181,19 @@ export default function FinRondaPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function FinRondaPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <FinRondaInner />
+    </Suspense>
   );
 }

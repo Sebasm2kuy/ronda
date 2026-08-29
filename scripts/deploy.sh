@@ -50,9 +50,9 @@ else
   bun run db:push
 fi
 
-# 4. Build de producción
+# 4. Build de producción (modo servidor standalone)
 echo "→ Compilando producción (esto puede tardar un poco)..."
-bun run build
+bun run build:server
 
 # 5. Reiniciar servidor
 echo "→ Reiniciando servidor..."

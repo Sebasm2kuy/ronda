@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, LogOut, MapPin, RefreshCw, ShieldCheck, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPatch, apiPost } from "@/lib/client";
+import { saveMediaBlob } from "@/lib/local-api";
 import type { PublicUser } from "@/lib/types";
 import { labelFor, LOOKING_FOR, PREFERENCES, GENDERS } from "@/lib/constants";
 
@@ -30,13 +31,8 @@ export default function PerfilPage() {
   const changePhoto = async (file: File) => {
     setUploadingPhoto(true);
     try {
-      const fd = new FormData();
-      fd.append("kind", "photos");
-      fd.append("file", file);
-      const res = await fetch("/api/media/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Error al subir la foto");
-      const d = await apiPatch<{ user: PublicUser }>("/api/users/me", { photoUrl: data.url });
+      const url = await saveMediaBlob(file, "photos");
+      const d = await apiPatch<{ user: PublicUser }>("/api/users/me", { photoUrl: url });
       setMe(d.user);
       toast.success("Foto actualizada");
     } catch (e) {

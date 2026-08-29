@@ -65,3 +65,28 @@ Stage Summary:
 - GitHub es la ÚNICA fuente de deploy: el servidor nunca se toca a mano; todo cambia vía push a main + scripts/deploy.sh
 - CI valida cada push (lint+build); commit verificado en SUCCESS
 - Servidor corriendo clon de origin/main; para actualizar: bash scripts/deploy.sh (o --force)
+
+---
+Task ID: 4
+Agent: main (Super Z)
+Task: RONDA en GitHub Pages — conversión a MVP estático 100% cliente y deploy público vía GitHub
+
+Work Log:
+- Diagnóstico: GitHub Pages solo sirve estáticos; el backend Next.js (API + SQLite) no puede correr ahí → conversión a app 100% cliente
+- Creado src/lib/idb.ts (wrapper IndexedDB), src/lib/demo-data.ts (10 demo users + 4 eventos + 12 rompehielos portados del seed), src/lib/errors.ts (ApiError compartido), src/lib/assets.ts (basePath)
+- Creado src/lib/local-api.ts: backend simulado que replica 1:1 los endpoints del servidor (auth/sesión, registro con foto dataURL, rounds join/leave/finish/choice con matching por capas y respuesta demo determinista, conexiones + mensajes, eventos, reports, blocks, stats con jitter, admin con PIN) sobre IndexedDB
+- client.ts reescrito: apiGet/apiPost/apiPatch/apiDelete enrutan a local-api → las páginas no cambiaron su lógica
+- Subidas de medios: registro/video-recorder/perfil ahora usan saveMediaBlob (dataURL en IndexedDB, límites 8MB foto / 40MB video)
+- Rutas dinámicas [id] → query params con Suspense (cita/?id, cita/fin/?id, chat/?id, match/?id) + links actualizados (ronda, conexiones, cita-client, fin, match)
+- API routes del servidor movidas a src/server/api-reference (contrato de referencia, fuera del router de export)
+- next.config.ts con doble modo: NEXT_EXPORT=1 → output export + basePath /ronda + trailingSlash; default → standalone (server)
+- package.json: build (estático), build:static, build:server separados; deploy.sh usa build:server
+- Fix lint react-hooks/set-state-in-effect en video-recorder (defer setTimeout, patrón ya usado antes)
+- E2E completo sobre el export estático servido bajo /ronda: landing + contador, registro 5 pasos con foto, video onboarding fallback, sala de espera, match con Diego, videollamada con timer/rompehielos/rotación, evaluación, ¡Coincidieron!, chat con saludo demo, reservar evento, conexiones, perfil, admin (PIN ronda2026, 11 usuarios), móvil 390px — todo OK
+- deploy-pages.yml: build export + empaquetado bajo /ronda + redirect raíz + deploy vía actions/deploy-pages
+- README actualizado (URL pública, doble modo, estructura)
+
+Stage Summary:
+- MVP RONDA 100% navegable como app estática: los datos viven en el navegador del usuario (privados por dispositivo)
+- URL pública canónica: https://sebasm2kuy.github.io/ronda/ (deploy automático en cada push a main)
+- Contrato de backend real preservado en src/server/api-reference para futura integración

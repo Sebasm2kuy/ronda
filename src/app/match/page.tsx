@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { MessagesSquare, Flame } from "lucide-react";
 import { apiGet } from "@/lib/client";
@@ -44,10 +44,10 @@ function Confetti() {
   );
 }
 
-export default function MatchPage() {
+function MatchInner() {
   const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const connectionId = params?.id ?? "";
+  const searchParams = useSearchParams();
+  const connectionId = searchParams.get("id") ?? "";
 
   const [connection, setConnection] = useState<ConnectionInfo | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -121,7 +121,7 @@ export default function MatchPage() {
           >
             <div className="mx-auto flex h-32 w-28 overflow-hidden rounded-[1.8rem] border border-primary/30 shadow-2xl shadow-black/40">
               {connection.partner.photoUrl ? (
-                 
+
                 <img src={connection.partner.photoUrl} alt={connection.partner.name} className="kenburns h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-surface text-3xl font-bold">
@@ -142,7 +142,7 @@ export default function MatchPage() {
           transition={{ delay: 0.65 }}
           className="mt-10 w-full space-y-3"
         >
-          <Link href={`/chat/${connectionId}`} className="btn-ronda w-full shadow-[0_8px_40px_rgba(240,180,41,0.3)]">
+          <Link href={`/chat/?id=${connectionId}`} className="btn-ronda w-full shadow-[0_8px_40px_rgba(240,180,41,0.3)]">
             <MessagesSquare className="h-5 w-5" /> ABRIR CHAT
           </Link>
           <button onClick={() => router.replace("/ronda")} className="btn-ghost w-full">
@@ -151,5 +151,19 @@ export default function MatchPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function MatchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <MatchInner />
+    </Suspense>
   );
 }

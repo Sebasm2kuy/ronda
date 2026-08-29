@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, SendHorizontal, ShieldAlert, ShieldBan } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPost } from "@/lib/client";
 import type { ConnectionInfo, ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export default function ChatPage() {
-  const params = useParams<{ id: string }>();
+function ChatInner() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const id = params?.id ?? "";
+  const id = searchParams.get("id") ?? "";
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,14 +108,13 @@ export default function ChatPage() {
         <Link href="/conexiones" className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-secondary transition-colors" aria-label="Volver">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <Link href={`/chat/${id}`} className="h-10 w-10 overflow-hidden rounded-full border border-border">
+        <div className="h-10 w-10 overflow-hidden rounded-full border border-border">
           {p.photoUrl ? (
-             
             <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center font-bold">{p.name[0]}</div>
           )}
-        </Link>
+        </div>
         <div className="flex-1 min-w-0">
           <p className="truncate font-display font-semibold">{p.name}, {p.age}</p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -202,5 +201,19 @@ export default function ChatPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <ChatInner />
+    </Suspense>
   );
 }

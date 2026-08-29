@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PRESENTATION_SECONDS } from "@/lib/constants";
+import { saveMediaBlob } from "@/lib/local-api";
 import { cn } from "@/lib/utils";
 
 type Phase =
@@ -87,8 +88,10 @@ export default function VideoRecorder({
   }, []);
 
   useEffect(() => {
-    if (autoStart) openCamera();
+    // Defer para no llamar setState directamente dentro del effect (react-hooks lint)
+    const t = autoStart ? setTimeout(() => openCamera(), 0) : null;
     return () => {
+      if (t) clearTimeout(t);
       stopStream();
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -160,15 +163,8 @@ export default function VideoRecorder({
     setPhase("uploading");
     try {
       const blob = await (await fetch(blobUrl)).blob();
-      const ext = blob.type.includes("mp4") ? "mp4" : blob.type.includes("ogg") ? "ogg" : "webm";
-      const file = new File([blob], `presentacion.${ext}`, { type: blob.type || "video/webm" });
-      const fd = new FormData();
-      fd.append("kind", "videos");
-      fd.append("file", file);
-      const res = await fetch("/api/media/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Error al subir");
-      onSaved(data.url as string);
+      const url = await saveMediaBlob(blob, "videos");
+      onSaved(url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No pudimos guardar tu video");
       setPhase("recorded");

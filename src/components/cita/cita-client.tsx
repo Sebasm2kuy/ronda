@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera, CameraOff, Mic, MicOff, PhoneOff, ShieldAlert, ShieldBan,
@@ -20,8 +20,10 @@ import {
 type CallPhase = "loading" | "connecting" | "live" | "ending";
 type MediaPhase = "asking" | "granted" | "denied";
 
-export default function CitaClient({ roundId }: { roundId: string }) {
+export default function CitaClient({ roundId: roundIdProp }: { roundId?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roundId = roundIdProp || searchParams.get("id") || "";
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -57,8 +59,7 @@ export default function CitaClient({ roundId }: { roundId: string }) {
       "Si mañana pudieras viajar gratis a cualquier lugar, ¿dónde irías?",
       "¿Qué cosa pequeña te hace feliz?",
     ];
-    fetch("/api/icebreakers")
-      .then((r) => r.json())
+    apiGet<{ questions: string[] }>("/api/icebreakers")
       .then((d) => setQuestions(d.questions?.length ? d.questions : FALLBACK_QUESTIONS))
       .catch(() => setQuestions(FALLBACK_QUESTIONS));
   }, [roundId, router]);
@@ -125,7 +126,7 @@ export default function CitaClient({ roundId }: { roundId: string }) {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     setCallPhase("ending");
     await apiPost(`/api/rounds/${roundId}/finish`).catch(() => {});
-    router.replace(`/cita/${roundId}/fin`);
+    router.replace(`/cita/fin/?id=${roundId}`);
   }, [roundId, router]);
 
   useEffect(() => {

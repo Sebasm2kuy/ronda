@@ -17,16 +17,17 @@ LANDING → REGISTRO → PERFIL → VIDEO DE PRESENTACIÓN (30s)
 
 | Capa | Elección |
 |------|----------|
-| Framework | Next.js 16 (App Router, standalone output) |
+| Framework | Next.js 16 (App Router, doble modo: export estático / standalone) |
 | UI | React 19 + Tailwind CSS 4 + shadcn/ui + framer-motion |
-| Base de datos | SQLite vía Prisma ORM |
+| Datos (MVP público) | Backend simulado en el navegador: IndexedDB (`src/lib/local-api.ts`) con los mismos 10 usuarios demo — desplegado en GitHub Pages |
+| Datos (servidor, referencia) | SQLite vía Prisma ORM — `src/server/api-reference/` conserva el contrato de API real para el futuro |
 | Video | getUserMedia + MediaRecorder (grabación directa en el navegador), videollamada simulada con arquitectura lista para WebRTC |
-| Auth | Sesiones con cookie httpOnly. Preparado para OAuth real (Google) — los botones Google/TikTok hoy muestran su estado honesto de integración pendiente, nunca simulan autenticación |
+| Auth | En el MVP estático la sesión vive en el navegador. Preparado para OAuth real (Google) — los botones Google/TikTok hoy muestran su estado honesto de integración pendiente, nunca simulan autenticación |
 
 ## Requisitos
 
 - Node.js 20+ o Bun 1.2+
-- No requiere servicios externos para funcionar (SQLite embebido)
+- El MVP público (GitHub Pages) no requiere ningún servicio externo
 
 ## Puesta en marcha
 
@@ -70,21 +71,23 @@ src/
     onboarding/video/     # Grabación de presentación (30s, MediaRecorder)
     (app)/                # Shell con bottom-nav móvil + sidebar desktop
       inicio/ ronda/ eventos/ conexiones/ perfil/
-    cita/[id]/            # Videollamada (timer 5:00, rompehielos rotativo)
-    cita/[id]/fin/        # Evaluación de la ronda
-    match/[id]/           # ¡Hay conexión!
-    chat/[id]/            # Chat de conexiones
+    cita/                 # Videollamada (?id=; timer 5:00, rompehielos rotativo)
+    cita/fin/             # Evaluación de la ronda
+    match/                # ¡Hay conexión!
+    chat/                 # Chat de conexiones
     admin/                # Panel administrador
     terminos/ privacidad/
   components/             # cita/, video/, shell/, ui/
-  lib/                    # auth, db, matching, media, constants, types
-  app/api/                # auth, users, rounds, connections, events,
-                          # icebreakers, media, reports, blocks, stats, admin
-prisma/schema.prisma      # User, Session, Round, Connection, Message,
-                          # Event, EventAttendee, Report, Block, Icebreaker
+  lib/                    # client (router), local-api (backend simulado),
+                          # idb (IndexedDB), demo-data, auth de referencia,
+                          # constants, types
+  server/api-reference/   # Contrato de API del backend real (futuro)
+prisma/schema.prisma      # Modelo de datos (User, Round, Connection, Message,
+                          # Event, Report, Block, Icebreaker…)
 public/avatars/           # Fotos demo
 public/demo-videos/       # Videos demo de presentación
-scripts/seed.ts           # Datos demo reproducibles
+scripts/deploy.sh         # Deploy del modo servidor desde GitHub
+scripts/seed.ts           # Datos demo reproducibles (modo servidor)
 ```
 
 ## Datos demo
@@ -115,40 +118,27 @@ bun run db:push && bun scripts/seed.ts   # reset total
 
 ## Deploy — únicamente desde GitHub
 
-El deploy de RONDA nace **exclusivamente de este repositorio**: el servidor no se toca a mano, todo cambia vía `git push` a `main`.
+### 🌐 Sitio público: GitHub Pages (canónico)
 
-### Flujo
+Cada push a `main` dispara `.github/workflows/deploy-pages.yml`: compila el export estático (`NEXT_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/ronda`), lo empaqueta bajo `/ronda` con redirect raíz y lo publica automáticamente.
 
-```
-git push → GitHub (main)
-             │
-             ├── GitHub Actions CI: lint + build validan el push
-             │
-             └── servidor: bash scripts/deploy.sh
-                   git fetch + reset --hard origin/main
-                   → bun install → prisma → build → restart
-```
+> **URL pública: https://sebasm2kuy.github.io/ronda/**
+
+En este modo todo el MVP corre en el navegador: matching demo, rondas, chat, eventos y los datos del usuario viven en IndexedDB del dispositivo (privados de cada navegador). La grabación de la presentación de 30 segundos usa la cámara real vía getUserMedia/MediaRecorder y queda guardada localmente.
 
 ### CI (GitHub Actions)
 
-`.github/workflows/ci.yml` corre en cada push/PR a `main`: instala dependencias con lockfile congelado, genera el cliente Prisma, crea la base con seed, pasa el lint y compila la build de producción. Si el CI falla, el código no se considera deployable.
+`.github/workflows/ci.yml` corre en cada push/PR a `main`: instala dependencias con lockfile congelado, genera el cliente Prisma, crea la base con seed, pasa el lint y compila. Si el CI falla, el código no se considera deployable.
 
-### Deploy en el servidor
+### Modo servidor (opcional, para VPS o backend real)
+
+El mismo repo también compila modo servidor standalone (`bun run build:server`), pensado para cuando se conecte un backend real (`src/server/api-reference/` tiene el contrato completo).
 
 ```bash
-# Primera vez: clonar el repo y configurar .env
-git clone https://github.com/Sebasm2kuy/ronda.git
-cd ronda
-cp .env.example .env   # editar DATABASE_URL (absoluta) y ADMIN_PIN
-
-# Deploy (idempotente: solo actúa si hay cambios nuevos en GitHub)
-bash scripts/deploy.sh
-
-# Rebuild forzado
-bash scripts/deploy.sh --force
+# Deploy del servidor desde GitHub (idempotente)
+bash scripts/deploy.sh          # solo actúa si hay cambios nuevos en origin/main
+bash scripts/deploy.sh --force  # rebuild forzado
 ```
-
-El script garantiza que lo que corre en el servidor es **exactamente** `origin/main`: hace `git reset --hard`, recrea la build y reinicia con verificación de salud. La base de datos SQLite vive fuera del repo y se siembra con el seed demo la primera vez.
 
 ### Hosting externo (opcional, futuro)
 

@@ -93,7 +93,7 @@ export default function RegistroPage() {
   const submit = async () => {
     setSubmitting(true);
     try {
-      // Si eligió foto local, subirla primero con sesión creada
+      // El registro acepta la foto como dataURL (se guarda junto al perfil)
       await apiPost("/api/auth/register", {
         name: form.name.trim(),
         age: ageNum,
@@ -102,27 +102,10 @@ export default function RegistroPage() {
         lookingFor: form.lookingFor,
         preference: form.preference,
         interests: form.interests,
-        photoUrl: null,
+        photoUrl: form.photoUrl?.startsWith("data:") ? form.photoUrl : null,
         acceptTerms: form.acceptTerms,
         acceptAge: form.acceptAge,
       });
-
-      // Subir foto ahora que hay sesión
-      if (form.photoUrl?.startsWith("data:")) {
-        const blob = await (await fetch(form.photoUrl)).blob();
-        const fd = new FormData();
-        fd.append("kind", "photos");
-        fd.append("file", new File([blob], "perfil.jpg", { type: blob.type || "image/jpeg" }));
-        const res = await fetch("/api/media/upload", { method: "POST", body: fd });
-        if (res.ok) {
-          const { url } = await res.json();
-          await fetch("/api/users/me", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photoUrl: url }),
-          });
-        }
-      }
 
       toast.success("¡Perfil creado! Ahora te toca a vos.");
       router.replace("/onboarding/video");

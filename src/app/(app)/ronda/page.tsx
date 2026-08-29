@@ -212,7 +212,7 @@ export default function RondaPage() {
             </p>
 
             <div className="mt-8 space-y-3">
-              <Link href={`/cita/${round.id}`} className="btn-ronda w-full max-w-xs shadow-[0_8px_40px_rgba(240,180,41,0.25)]">
+              <Link href={`/cita/?id=${round.id}`} className="btn-ronda w-full max-w-xs shadow-[0_8px_40px_rgba(240,180,41,0.25)]">
                 ENTRAR A LA RONDA <ArrowRight className="h-4 w-4" />
               </Link>
               <button onClick={cancel} className="block w-full text-xs text-muted-foreground hover:text-foreground transition-colors">

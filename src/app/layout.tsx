@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description:
     "Dejá de deslizar perfiles. Empezá a conocer personas. RONDA te conecta en vivo: grabá tu presentación de 30 segundos y entrá a una ronda de 5 minutos.",
   icons: {
-    icon: "/logo.svg",
+    icon: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`,
   },
   openGraph: {
     title: "RONDA",

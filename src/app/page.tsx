@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Camera, Timer, Users, HeartHandshake, ChevronDown, ShieldCheck, Video, Sparkles } from "lucide-react";
 import { RondaMark } from "@/components/shell/app-shell";
 import { apiGet } from "@/lib/client";
+import { assetUrl } from "@/lib/assets";
 import type { LiveStatus } from "@/lib/types";
 
 const STEPS = [
@@ -130,7 +131,7 @@ export default function Landing() {
             <div className="glass rounded-[2rem] p-3 shadow-2xl shadow-black/40">
               <div className="relative overflow-hidden rounded-[1.6rem] bg-surface-2 aspect-[16/10]">
                 <video
-                  src="/demo-videos/valentina.mp4"
+                  src={assetUrl("/demo-videos/valentina.mp4")}
                   autoPlay
                   muted
                   loop

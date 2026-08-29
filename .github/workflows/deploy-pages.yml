@@ -1,0 +1,65 @@
+name: Deploy a GitHub Pages
+
+# RONDA — Deploy público exclusivamente desde GitHub.
+# Cada push a main compila el export estático y lo publica en:
+#   https://sebasm2kuy.github.io/ronda/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build estático
+    runs-on: ubuntu-latest
+    env:
+      NEXT_EXPORT: "1"
+      NEXT_PUBLIC_BASE_PATH: /ronda
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+
+      - name: Build de export estático
+        run: bun run build
+
+      - name: Empaquetar para Pages (bajo /ronda + redirect raíz)
+        run: |
+          mkdir -p site/ronda
+          cp -r out/. site/ronda/
+          cat > site/index.html << 'HTML'
+          <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./ronda/"><title>RONDA</title></head><body><script>location.replace('./ronda/')</script><p>RONDA — <a href="./ronda/">entrar</a></p></body></html>
+          HTML
+          test -f site/ronda/index.html || { echo "Falta site/ronda/index.html"; exit 1; }
+          test -d site/ronda/_next || { echo "Faltan assets _next"; exit 1; }
+          echo "✓ Paquete listo: $(find site -name '*.html' | wc -l) HTML"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Publicar en Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
