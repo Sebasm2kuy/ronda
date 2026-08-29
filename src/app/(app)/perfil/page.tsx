@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, LogOut, MapPin, RefreshCw, ShieldCheck, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPatch, apiPost } from "@/lib/client";
-import { saveMediaBlob } from "@/lib/local-api";
+import { saveMediaBlob } from "@/lib/browser-api";
 import type { PublicUser } from "@/lib/types";
 import { labelFor, LOOKING_FOR, PREFERENCES, GENDERS } from "@/lib/constants";
 

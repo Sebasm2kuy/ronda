@@ -2,7 +2,7 @@
 
 Estas rutas implementaron el backend del MVP cuando corría con servidor
 (Next.js API routes + Prisma/SQLite). Hoy el MVP estático usa el backend
-simulado en el navegador (`src/lib/local-api.ts`) y estas rutas quedan
+simulado en el navegador (`src/lib/browser-api.ts`) y estas rutas quedan
 **fuera del router** como contrato de referencia.
 
 Para volver a un backend real:

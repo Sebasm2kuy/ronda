@@ -19,7 +19,7 @@ LANDING → REGISTRO → PERFIL → VIDEO DE PRESENTACIÓN (30s)
 |------|----------|
 | Framework | Next.js 16 (App Router, doble modo: export estático / standalone) |
 | UI | React 19 + Tailwind CSS 4 + shadcn/ui + framer-motion |
-| Datos (MVP público) | Backend simulado en el navegador: IndexedDB (`src/lib/local-api.ts`) con los mismos 10 usuarios demo — desplegado en GitHub Pages |
+| Datos (MVP público) | Backend simulado en el navegador: IndexedDB (`src/lib/browser-api.ts`) con los mismos 10 usuarios demo — desplegado en GitHub Pages |
 | Datos (servidor, referencia) | SQLite vía Prisma ORM — `src/server/api-reference/` conserva el contrato de API real para el futuro |
 | Video | getUserMedia + MediaRecorder (grabación directa en el navegador), videollamada simulada con arquitectura lista para WebRTC |
 | Auth | En el MVP estático la sesión vive en el navegador. Preparado para OAuth real (Google) — los botones Google/TikTok hoy muestran su estado honesto de integración pendiente, nunca simulan autenticación |
@@ -78,7 +78,7 @@ src/
     admin/                # Panel administrador
     terminos/ privacidad/
   components/             # cita/, video/, shell/, ui/
-  lib/                    # client (router), local-api (backend simulado),
+  lib/                    # client (router), browser-api (backend simulado),
                           # idb (IndexedDB), demo-data, auth de referencia,
                           # constants, types
   server/api-reference/   # Contrato de API del backend real (futuro)

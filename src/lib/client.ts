@@ -1,9 +1,9 @@
 // Helpers de API del lado cliente.
 // En el MVP estático (GitHub Pages) todas las llamadas se resuelven
-// con el backend simulado en el navegador (src/lib/local-api.ts).
+// con el backend simulado en el navegador (src/lib/browser-api.ts).
 // Para volver a un backend real: reemplazar handle() por fetch().
 
-import { handleApi } from "@/lib/local-api";
+import { handleApi } from "@/lib/browser-api";
 export { ApiError } from "@/lib/errors";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

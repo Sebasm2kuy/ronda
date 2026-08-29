@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PRESENTATION_SECONDS } from "@/lib/constants";
-import { saveMediaBlob } from "@/lib/local-api";
+import { saveMediaBlob } from "@/lib/browser-api";
 import { cn } from "@/lib/utils";
 
 type Phase =
