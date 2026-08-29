@@ -47,3 +47,21 @@ Stage Summary:
 - App corriendo en producción standalone sobre :3000, E2E verificado en ambos modos
 - Para futuros push: git push con token válido de Sebasm2kuy (scope repo/contents write); remote "origin" ya configurado
 - Pendiente para siguientes iteraciones: OAuth real, WebRTC real, IA de rompehielos/matching, "segunda oportunidad" funcional
+
+---
+Task ID: 3
+Agent: main (Super Z)
+Task: Deploy de RONDA exclusivamente vía GitHub (requisito del usuario)
+
+Work Log:
+- Creado .github/workflows/ci.yml: en cada push/PR a main → install (lockfile congelado) + prisma generate + db push + seed + lint + build de producción
+- Creado scripts/deploy.sh (versionado en el repo): git fetch + reset --hard origin/main → install → prisma → (seed solo si DB nueva) → build → restart con health check; idempotente (--force para rebuild)
+- README actualizado: sección "Deploy — únicamente desde GitHub" con el flujo completo
+- Detectado y corregido: auto-sync de la plataforma re-agregó boilerplate (.zscripts, tests, examples, mini-services, download) → eliminado del repo y .gitignore reforzado con esas rutas
+- Redespliegue real: clon fresco de github.com/Sebasm2kuy/ronda en /home/z/deploy/ronda (fuera del workspace), .env local (DATABASE_URL absoluta + ADMIN_PIN), deploy.sh ejecutado → build OK, servidor de producción sirviendo en :3000 exactamente origin/main (26c3348)
+- Verificado: app saludable (landing/registro/avatars/stats), deploy.sh idempotente ("nada que hacer" sin cambios), GitHub Actions CI en SUCCESS para 26c3348
+
+Stage Summary:
+- GitHub es la ÚNICA fuente de deploy: el servidor nunca se toca a mano; todo cambia vía push a main + scripts/deploy.sh
+- CI valida cada push (lint+build); commit verificado en SUCCESS
+- Servidor corriendo clon de origin/main; para actualizar: bash scripts/deploy.sh (o --force)
