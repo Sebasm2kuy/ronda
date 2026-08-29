@@ -1,0 +1,44 @@
+name: CI
+
+# RONDA — Validación continua.
+# Todo deploy nace exclusivamente de este repositorio:
+# cada push a main debe compilar antes de llegar al servidor.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Lint + Build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: file:./db/ci.db
+      ADMIN_PIN: ci-pin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+
+      - name: Generar cliente Prisma
+        run: bun run db:generate
+
+      - name: Crear base de datos CI
+        run: bunx prisma db push --accept-data-loss
+
+      - name: Seed demo
+        run: bun scripts/seed.ts
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Build de producción
+        run: bun run build

@@ -113,15 +113,44 @@ bun run db:push && bun scripts/seed.ts   # reset total
 - **IA**: generación de rompehielos personalizados, mejor matching, moderación asistida, recomendación de eventos. La IA nunca habla por el usuario — solo facilita que dos humanos se conozcan.
 - **Segunda oportunidad**: “Quizás quedó algo pendiente…” — el modelo de datos permite reintroducir conexiones pasadas.
 
-## Deploy
+## Deploy — únicamente desde GitHub
 
-La app es un Next.js standalone: se despliega en cualquier Node 20+.
+El deploy de RONDA nace **exclusivamente de este repositorio**: el servidor no se toca a mano, todo cambia vía `git push` a `main`.
 
-```bash
-bun install && bun run db:generate && bun run db:push && bun scripts/seed.ts
-bun run build
-ADMIN_PIN=tu-pin bun run start   # sirve en :3000
+### Flujo
+
+```
+git push → GitHub (main)
+             │
+             ├── GitHub Actions CI: lint + build validan el push
+             │
+             └── servidor: bash scripts/deploy.sh
+                   git fetch + reset --hard origin/main
+                   → bun install → prisma → build → restart
 ```
 
-- **Vercel/Railway/Render**: conectar el repo, setear `ADMIN_PIN`, usar un volumen persistente para SQLite (`DATABASE_URL`) y `UPLOAD_DIR`.
-- **VPS**: `bun run build && bun run start` detrás de un reverse proxy (se incluye `Caddyfile` de ejemplo).
+### CI (GitHub Actions)
+
+`.github/workflows/ci.yml` corre en cada push/PR a `main`: instala dependencias con lockfile congelado, genera el cliente Prisma, crea la base con seed, pasa el lint y compila la build de producción. Si el CI falla, el código no se considera deployable.
+
+### Deploy en el servidor
+
+```bash
+# Primera vez: clonar el repo y configurar .env
+git clone https://github.com/Sebasm2kuy/ronda.git
+cd ronda
+cp .env.example .env   # editar DATABASE_URL (absoluta) y ADMIN_PIN
+
+# Deploy (idempotente: solo actúa si hay cambios nuevos en GitHub)
+bash scripts/deploy.sh
+
+# Rebuild forzado
+bash scripts/deploy.sh --force
+```
+
+El script garantiza que lo que corre en el servidor es **exactamente** `origin/main`: hace `git reset --hard`, recrea la build y reinicia con verificación de salud. La base de datos SQLite vive fuera del repo y se siembra con el seed demo la primera vez.
+
+### Hosting externo (opcional, futuro)
+
+- **Vercel/Railway/Render**: conectar este mismo repo como fuente; setear `ADMIN_PIN`, `DATABASE_URL` (volumen persistente para SQLite o cambiar a Postgres) y `UPLOAD_DIR`.
+- **VPS propio**: `scripts/deploy.sh` detrás de un reverse proxy (se incluye `Caddyfile` de ejemplo).
