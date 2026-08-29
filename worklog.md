@@ -90,3 +90,20 @@ Stage Summary:
 - MVP RONDA 100% navegable como app estática: los datos viven en el navegador del usuario (privados por dispositivo)
 - URL pública canónica: https://sebasm2kuy.github.io/ronda/ (deploy automático en cada push a main)
 - Contrato de backend real preservado en src/server/api-reference para futura integración
+
+---
+Task ID: 5
+Agent: main (Super Z)
+Task: Deploy público de RONDA en GitHub Pages — fixes finales y verificación en vivo
+
+Work Log:
+- Primer deploy Pages falló: .gitignore de plataforma (patrón local-*) excluía src/lib/local-api.ts del repo → renombrado a src/lib/browser-api.ts, referencias actualizadas
+- Segundo deploy: artefacto mal empaquetado (duplicaba el prefijo: Pages de proyecto ya sirve bajo /ronda/) → artefacto = out/ directo, verificación de basePath en el workflow
+- Tercer deploy: SUCCESS → https://sebasm2kuy.github.io/ronda/ en vivo
+- Verificado en vivo: landing 200 con identidad + contador (IndexedDB activo), registro 200 con navegación directa, cita/ronda 200, avatares 200, videos demo 200, chunks JS con basePath 200
+- CI en SUCCESS y deploy Pages en SUCCESS para 2f1445f
+- Servidor de preview re-sincronizado desde GitHub (deploy.sh, commit 2f1445f) — ambos canales desde el repo
+
+Stage Summary:
+- URL pública final: https://sebasm2kuy.github.io/ronda/ — MVP navegable completo, deploy 100% automático desde GitHub en cada push a main
+- Lecciones documentadas: patrón local-* en .gitignore (usar browser-*), Pages de proyecto = artefacto out/ directo con basePath /ronda
