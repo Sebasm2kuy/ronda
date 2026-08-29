@@ -5,7 +5,7 @@ import { readdirSync, unlinkSync, existsSync } from "fs";
 import path from "path";
 
 const db = new PrismaClient();
-const UPLOAD_ROOT = "/home/z/my-project/uploads";
+const UPLOAD_ROOT = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
 async function main() {
   const realUsers = await db.user.findMany({ where: { isDemo: false } });

@@ -7,7 +7,7 @@ import path from "path";
 import { randomBytes } from "crypto";
 import { Readable } from "stream";
 
-export const UPLOAD_ROOT = process.env.UPLOAD_DIR ?? "/home/z/my-project/uploads";
+export const UPLOAD_ROOT = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
 export const MEDIA_KINDS = {
   photos: { dir: "photos", maxBytes: 8 * 1024 * 1024, exts: [".jpg", ".jpeg", ".png", ".webp"], mimePrefix: "image/" },
