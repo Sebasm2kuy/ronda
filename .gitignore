@@ -61,3 +61,10 @@ server.log
 
 # assets de trabajo locales
 /assets_tmp/
+
+# boilerplate de plataforma (nunca publicar)
+/.zscripts/
+/tests/
+/examples/
+/mini-services/
+/download/
