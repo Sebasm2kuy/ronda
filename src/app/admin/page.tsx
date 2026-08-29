@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Lock, RefreshCw, Users, Flame, HeartHandshake, ShieldAlert, Radio } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/client";
 import type { AdminStats } from "@/lib/types";
+import { readConversationAggregate, type ConversationAggregate } from "@/lib/conversation/metrics-client";
 import { USER_STATUS, labelFor, REPORT_REASONS, LOOKING_FOR } from "@/lib/constants";
 import { RondaMark } from "@/components/shell/app-shell";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ export default function AdminPage() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [convMetrics, setConvMetrics] = useState<ConversationAggregate | null>(null);
 
   const loadStats = useCallback(() => {
     apiGet<AdminStats>("/api/admin/stats")
@@ -21,6 +23,8 @@ export default function AdminPage() {
         setAuthed(true);
       })
       .catch(() => setAuthed(false));
+    // Métricas del motor de conversación (viven en este dispositivo, MVP estático).
+    void readConversationAggregate().then(setConvMetrics);
   }, []);
 
   useEffect(() => {
@@ -132,6 +136,43 @@ export default function AdminPage() {
             </div>
           </div>
 
+          {/* Motor de conversación (spec §20) */}
+          {convMetrics && convMetrics.rounds > 0 && (
+            <div className="mt-6 rounded-3xl border border-border bg-surface/60 p-5">
+              <h2 className="mb-1 font-display font-bold">Motor de conversación</h2>
+              <p className="mb-4 text-[11px] text-muted-foreground">
+                Métricas internas para mejorar el producto (nunca para manipular). Datos de este dispositivo.
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <MetricChip label="Rondas con motor" value={String(convMetrics.rounds)} />
+                <MetricChip
+                  label="Aceptación"
+                  value={`${convMetrics.totalInterventions > 0 ? Math.round((convMetrics.totalAccepted / convMetrics.totalInterventions) * 100) : 0}%`}
+                  sub={`${convMetrics.totalAccepted}/${convMetrics.totalInterventions} tarjetas`}
+                />
+                <MetricChip
+                  label="Propuestas de silencio"
+                  value={String(convMetrics.proposalsShown)}
+                  sub={`${convMetrics.proposalsAccepted} sí · ${convMetrics.proposalsDeclined} «seguimos»`}
+                />
+                <MetricChip
+                  label="Salud final prom."
+                  value={`${convMetrics.rounds > 0 ? Math.round(convMetrics.sumFinalHealth / convMetrics.rounds) : 0}/100`}
+                />
+                <MetricChip
+                  label="Temas que más fluyen"
+                  value={
+                    Object.entries(convMetrics.topTopics)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 3)
+                      .map(([t]) => t)
+                      .join(", ") || "—"
+                  }
+                />
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
             {/* Usuarios */}
             <div className="rounded-3xl border border-border bg-surface/60 p-5">
@@ -212,6 +253,16 @@ export default function AdminPage() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function MetricChip({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-2xl bg-secondary/50 px-3 py-2.5 text-center">
+      <p className="font-display text-lg font-bold leading-tight">{value}</p>
+      <p className="text-[11px] font-medium">{label}</p>
+      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
     </div>
   );
 }

@@ -34,12 +34,15 @@ const OPTIONS: Array<{ value: Choice; label: string; desc: string; icon: typeof 
   },
 ];
 
+interface ConvSummary { finalHealth: number; peakHealth: number; exchanges: number; goodChat: boolean }
+
 function FinRondaInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roundId = searchParams.get("id") ?? "";
 
   const [round, setRound] = useState<RoundInfo | null>(null);
+  const [convSummary, setConvSummary] = useState<ConvSummary | null>(null);
   const [sending, setSending] = useState<Choice | null>(null);
   const [result, setResult] = useState<{ matched: boolean; pending: boolean } | null>(null);
 
@@ -48,6 +51,19 @@ function FinRondaInner() {
     apiGet<{ round: RoundInfo }>(`/api/rounds/${roundId}`)
       .then((d) => setRound(d.round))
       .catch(() => router.replace("/inicio"));
+
+    // Resumen del motor de conversación (spec §19): si la charla fue buena,
+    // el cierre prepara psicológicamente el posible match.
+    // (Lectura diferida para evitar setState síncrono en el efecto.)
+    const t = setTimeout(() => {
+      try {
+        const raw = sessionStorage.getItem(`ronda:conv:${roundId}`);
+        if (raw) setConvSummary(JSON.parse(raw) as ConvSummary);
+      } catch {
+        // sin resumen, la página funciona igual
+      }
+    }, 0);
+    return () => clearTimeout(t);
   }, [roundId, router]);
 
   const choose = async (choice: Choice) => {
@@ -125,8 +141,15 @@ function FinRondaInner() {
           <div className="mb-8 text-center">
             <p className="text-xs font-semibold tracking-[0.3em] text-primary mb-3">SE TERMINÓ LA RONDA</p>
             <h1 className="font-display text-3xl font-bold text-balance">
-              ¿Cómo te sentiste hablando con esta persona?
+              {convSummary?.goodChat
+                ? "Parece que todavía quedaron cosas por hablar…"
+                : "¿Cómo te sentiste hablando con esta persona?"}
             </h1>
+            {convSummary?.goodChat ? (
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                Cuando se termina una buena conversación, siempre se siente que faltó tiempo. ¿Cómo te sentiste?
+              </p>
+            ) : null}
             <div className="mt-5 flex items-center justify-center gap-3">
               <div className="h-12 w-12 overflow-hidden rounded-full border border-border">
                 {partner.photoUrl ? (

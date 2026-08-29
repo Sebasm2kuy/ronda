@@ -6,13 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera, CameraOff, Mic, MicOff, PhoneOff, ShieldAlert, ShieldBan,
-  Loader2, Sparkles, RefreshCw, ArrowLeft,
+  Loader2, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPost } from "@/lib/client";
-import type { RoundInfo } from "@/lib/types";
+import type { PublicUser, RoundInfo } from "@/lib/types";
 import { ROUND_SECONDS, REPORT_REASONS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import ConversationHost from "@/components/cita/conversation-host";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,20 +31,18 @@ export default function CitaClient({ roundId: roundIdProp }: { roundId?: string 
   const finishedRef = useRef(false);
 
   const [round, setRound] = useState<RoundInfo | null>(null);
+  const [me, setMe] = useState<PublicUser | null>(null);
   const [callPhase, setCallPhase] = useState<CallPhase>("loading");
   const [mediaPhase, setMediaPhase] = useState<MediaPhase>("asking");
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS);
-  const [questions, setQuestions] = useState<string[]>([]);
-  const [qIndex, setQIndex] = useState(0);
-  const [showIcebreaker, setShowIcebreaker] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
   const [reportReason, setReportReason] = useState<string>(REPORT_REASONS[0].value);
 
-  // Cargar ronda + rompehielos
+  // Cargar ronda + mi perfil (para el motor de conversación)
   useEffect(() => {
     if (!roundId) return;
     apiGet<{ round: RoundInfo }>(`/api/rounds/${roundId}`)
@@ -53,15 +52,9 @@ export default function CitaClient({ roundId: roundIdProp }: { roundId?: string 
       })
       .catch(() => router.replace("/ronda"));
 
-    const FALLBACK_QUESTIONS = [
-      "¿Qué canción pondrías ahora mismo si nadie pudiera juzgarte?",
-      "¿Cuál fue la última cosa que te hizo reír de verdad?",
-      "Si mañana pudieras viajar gratis a cualquier lugar, ¿dónde irías?",
-      "¿Qué cosa pequeña te hace feliz?",
-    ];
-    apiGet<{ questions: string[] }>("/api/icebreakers")
-      .then((d) => setQuestions(d.questions?.length ? d.questions : FALLBACK_QUESTIONS))
-      .catch(() => setQuestions(FALLBACK_QUESTIONS));
+    apiGet<{ user: PublicUser }>("/api/users/me")
+      .then((d) => setMe(d.user))
+      .catch(() => {});
   }, [roundId, router]);
 
   // Cámara local
@@ -104,20 +97,9 @@ export default function CitaClient({ roundId: roundIdProp }: { roundId?: string 
     return () => clearTimeout(t);
   }, [callPhase]);
 
-  // Rompehielos: aparece a los 8s, rota cada 75s
-  useEffect(() => {
-    if (callPhase !== "live") return;
-    const appear = setTimeout(() => setShowIcebreaker(true), 8000);
-    return () => clearTimeout(appear);
-  }, [callPhase]);
-
-  useEffect(() => {
-    if (!showIcebreaker) return;
-    const rotate = setInterval(() => {
-      setQIndex((i) => (questions.length ? (i + 1) % questions.length : i));
-    }, 75000);
-    return () => clearInterval(rotate);
-  }, [showIcebreaker, questions.length]);
+  // El motor de conversación arranca cuando la llamada está "live"
+  // (se monta ConversationHost abajo; los rompehielos estáticos
+  // fueron reemplazados por el motor adaptativo).
 
   // Timer de la ronda
   const finishRound = useCallback(async () => {
@@ -160,10 +142,6 @@ export default function CitaClient({ roundId: roundIdProp }: { roundId?: string 
       track.enabled = !track.enabled;
       setCamOn(track.enabled);
     }
-  };
-
-  const nextQuestion = () => {
-    setQIndex((i) => (questions.length ? (i + 1) % questions.length : i));
   };
 
   const doReport = async () => {
@@ -325,45 +303,14 @@ export default function CitaClient({ roundId: roundIdProp }: { roundId?: string 
         )}
       </div>
 
-      {/* Rompehielos */}
-      <AnimatePresence>
-        {showIcebreaker && callPhase === "live" && questions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ type: "spring", damping: 22, stiffness: 260 }}
-            className="absolute inset-x-4 bottom-28 z-10 sm:bottom-32 sm:left-1/2 sm:right-auto sm:w-[480px] sm:-translate-x-1/2"
-            role="status"
-          >
-            <div className="glass rounded-3xl p-5 shadow-2xl shadow-black/50">
-              <div className="mb-2.5 flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.25em] text-primary">
-                  <Sparkles className="h-3.5 w-3.5" /> ROMPEHIELOS
-                </span>
-                <button
-                  onClick={nextQuestion}
-                  className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <RefreshCw className="h-3 w-3" /> Otra
-                </button>
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={qIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
-                  className="font-display text-lg font-semibold leading-snug text-balance"
-                >
-                  {questions[qIndex]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Motor de conversación adaptativo (captions + tarjetas + composer) */}
+      <ConversationHost
+        roundId={roundId}
+        partner={{ name: partner.name, interests: partner.interests }}
+        me={me ? { name: me.name, interests: me.interests } : null}
+        callPhase={callPhase}
+        secondsLeft={secondsLeft}
+      />
 
       {/* Controles */}
       <div className="relative z-10 flex items-center justify-center gap-4 bg-black/85 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5">

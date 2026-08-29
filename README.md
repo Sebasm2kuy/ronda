@@ -61,6 +61,36 @@ bun run start
 | `UPLOAD_DIR` | `./uploads` | Directorio de fotos/videos subidos |
 | `DATABASE_URL` | `file:./db/custom.db` | Ruta de la base SQLite |
 
+## Motor de Conversación Adaptativo
+
+El corazón de RONDA durante la ronda de 5 minutos no es una lista de rompehielos: es un **facilitador invisible** que ayuda a que dos desconocidos tengan una conversación que no quieran terminar.
+
+Filosofía (spec §26): la IA no está para hacer la conversación, está para hacer que la conversación humana sea mejor. Si la charla fluye (salud ≥ 78/100), **el motor se calla**. Interviene solo ante silencio (con consentimiento: *"¿Les tiro una pregunta? 👀"* → Sí / *Seguimos hablando*), estancamiento, hooks con historias, coincidencias sin explotar o diferencias divertidas.
+
+Arquitectura modular (`src/lib/conversation/`), desacoplada de cualquier proveedor de IA:
+
+```
+types.ts            Contratos core (Intervención, Health, Payload…)
+analyzer.ts         Detección de temas/específicos/humor/hooks (ES-UY)
+context.ts          Conversation Context: coincidencias, diferencias, memoria
+health.ts           Conversation score 0–100 (ritmo, reciprocidad, humor)
+progression.ts      Progresión por minutos: LIGHT → COINCIDENCE → PERSONAL → MEMORABLE
+safety.ts           Safety Filter (nunca sexual/acoso/discriminación/datos sensibles)
+content/bank.ts     Banco curado de preguntas que generan historias (voseo)
+content/templates.ts Plantillas dinámicas: "Los dos eligieron Japón 👀…"
+engine.ts           ConversationEngine: cuándo hablar y (sobre todo) cuándo callar
+provider.ts         AIProvider: stub listo para IA real (AI_MODE), hoy reglas
+prompt-builder.ts   Prompt estructurado para un futuro LLM
+metrics.ts          Métricas internas (§20): aceptación, gaps, salud, temas
+demo/persona.ts     MODO DEMO: la pareja simulada responde por reglas
+```
+
+Para conectar una IA real: implementar `AIProvider` en `provider.ts` + `AI_MODE=true` + `NEXT_PUBLIC_AI_ENDPOINT`. Todo texto generado (hoy o mañana) pasa **siempre** por el Safety Filter.
+
+Privacidad: nada de audio/video se graba ni almacena; el contexto vive solo en memoria durante la ronda; las métricas no guardan contenido de conversaciones.
+
+Test determinista del motor: `bun scripts/test-engine.ts` (25 aserciones de los comportamientos canónicos de la spec).
+
 ## Estructura
 
 ```
