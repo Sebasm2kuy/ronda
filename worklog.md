@@ -107,3 +107,25 @@ Work Log:
 Stage Summary:
 - URL pública final: https://sebasm2kuy.github.io/ronda/ — MVP navegable completo, deploy 100% automático desde GitHub en cada push a main
 - Lecciones documentadas: patrón local-* en .gitignore (usar browser-*), Pages de proyecto = artefacto out/ directo con basePath /ronda
+
+---
+Task ID: 6
+Agent: main (Super Z)
+Task: RONDA — Motor de Conversación Adaptativo (facilitador invisible, modo DEMO, arquitectura lista para IA real)
+
+Work Log:
+- Creado src/lib/conversation/ con arquitectura modular completa (spec §21): types, analyzer (temas/específicos/humor/hooks ES-UY con matching por límites de palabra Unicode), context (coincidencias fuertes con detalle, batallas intra-tema, hooks, memoria en RAM), health (score 0-100 con rampa temporal), progression (LIGHT→COINCIDENCE→PERSONAL→MEMORABLE), safety (filtro bidireccional), content/bank (banco curado voseo que genera historias, cero entrevista), content/templates (plantillas dinámicas §5/§6/§7), engine (gates: gap 45s, backoff por cierre/declinación, máx 6/ronda, memorable con prioridad), provider (AIProvider + RemoteAIProvider stub AI_MODE), prompt-builder, metrics
+- MODO DEMO (§22): demo/persona.ts simula a la pareja (reglas + intereses del perfil): responde tarjetas, ESPEJA temas (beat canónico "Yo también quiero conocer Japón"), sostiene diferencias ("reggaetón"), suelta hooks ("Cuando tenía 20 años me fui solo…"), invita a participar
+- UI (§25): components/cita/conversation-host.tsx — stack flex no invasivo (captions + propuesta + tarjeta + composer), tarjetas con tipo (PARA LOS DOS/DESAFÍO/HIPOTÉTICO…), X + Otra + Responder, propuesta de silencio con consentimiento y timeout 18s, marcadores "⏳ Queda 1 minuto" / "Últimos 30 segundos 👀"; cita-client integra el host y elimina SOLO el bloque estático de rompehielos
+- Fin de ronda (§19): "Parece que todavía quedaron cosas por hablar…" si salud ≥60 o pico ≥72 (sessionStorage)
+- Métricas (§20): IndexedDB por ronda + agregado; bloque "Motor de conversación" en /admin (rondas, aceptación, propuestas sí/seguimos, salud final prom., temas que más fluyen)
+- Bugs corregidos durante el desarrollo: "te" como substring matcheaba todo (matching por palabra+plural); coincidencia quemada por tarjetas de fase (exploitedCoincidences separado); batalla intra-tema no detectada cuando B responde segundo; propuesta sin resolver bloqueaba la memorable; salud arrancaba "alta" por rampa ausente; doble invitación (reactivación + propuesta simultáneas); músico que decía "la música no es lo mío" (mapeo etiqueta→clave de tema, incluye cine)
+- Test determinista scripts/test-engine.ts: 25 aserciones cubriendo §5 §6 §7 §10 §12 §15 §18 §20 §23 — 8 corridas consecutivas 25/25 estables
+- E2E browser real (Gonzalo 36, Viajes+Música): saludo → primera tarjeta → espejo "Yo también quiero conocer Japón." → tarjeta "Los dos eligieron japón 👀 Si mañana les regalaran los pasajes…" (§5 VERBATIM) → propuesta de silencio → reactivación → fin natural con "Parece que todavía quedaron cosas por hablar…" (§19) → match → admin con métricas → móvil 390px (tarjeta no cubre video)
+- Deploy: push 5ba9663 → CI SUCCESS + Deploy Pages SUCCESS; deploy.sh redeployó el servidor desde GitHub (health OK); motor verificado en el bundle de AMBOS canales (Pages y servidor preview)
+
+Stage Summary:
+- RONDA ahora tiene un facilitador invisible real: si la conversación fluye calla; ante silencio pide permiso; explota coincidencias y convierte diferencias en batallas; cierra el último minuto con una pregunta memorable
+- El sistema completo pasa por Safety Filter; sin grabación de audio/video; métricas sin contenido de conversaciones
+- Para IA real: implementar AIProvider (provider.ts) + AI_MODE=true + NEXT_PUBLIC_AI_ENDPOINT — el resto del sistema no cambia
+- Comando de regresión del motor: bun scripts/test-engine.ts
