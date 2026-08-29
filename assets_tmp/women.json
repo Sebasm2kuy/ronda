@@ -1,0 +1,68 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "natural portrait photo of a smiling woman in her late 30s, headshot, warm light"
+✅ Got 8 images
+{
+  "success": true,
+  "query": "natural portrait photo of a smiling woman in her late 30s, headshot, warm light",
+  "count": 8,
+  "ranked": false,
+  "captioned_count": 0,
+  "results": [
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/1599fbc3d762.png",
+      "caption": "",
+      "source": "Easy-Peasy.AI",
+      "original_width": "2048px",
+      "original_height": "2048px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/a455db7febd8.jpg",
+      "caption": "",
+      "source": "Shutterstock",
+      "original_width": "1500px",
+      "original_height": "1099px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/5fdb6e6fa4a3.jpg",
+      "caption": "",
+      "source": "Fox News",
+      "original_width": "1200px",
+      "original_height": "675px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/3151dc7417e1.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "955px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/2afd69305498.jpg",
+      "caption": "",
+      "source": "ChatgptPrompt",
+      "original_width": "784px",
+      "original_height": "1168px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/d45082c1aad4.png",
+      "caption": "",
+      "source": "Coastal Health & Medical Spa",
+      "original_width": "1344px",
+      "original_height": "768px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/cc816fb07638.png",
+      "caption": "",
+      "source": "Midi Health",
+      "original_width": "1114px",
+      "original_height": "1114px"
+    },
+    {
+      "original_url": "https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/472062867214.png",
+      "caption": "",
+      "source": "evenskyn",
+      "original_width": "1672px",
+      "original_height": "941px"
+    }
+  ]
+}
